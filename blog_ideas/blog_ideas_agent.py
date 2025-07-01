@@ -1,29 +1,22 @@
-from langchain.agents import initialize_agent
-from langchain.agents import AgentType
-from langchain.memory import ConversationBufferMemory
-from fairo.core.chat.chat import FairoChat
-
+# from langchain.chat_models import ChatOpenAI
+from langchain.prompts import PromptTemplate
+from langchain.chains import LLMChain
+from fairo.core.chat import ChatFairo
 def ideasforblogpost():
-    llm = FairoChat(
-        endpoint="chat",
-    )
-    tools = []
-    role_prompt = """
-    You are Ideas For Blogpost Agent, an expert at reading a subject and providing new blogpost ideas for that niche.
-    You always:
-    - Structure a list of 10 new blogpost titles based on the subject provided
+    template = """
+    You are an expert Blog-Post Idea Generator.
+    When given a topic, you must output a list of 10 creative blog post titles,
+    each on its own line.
+
+    Topic: {topic}
     """
-    suffix_prompt = "When given a subject, read it and output a structured list of 10 new blogpost titles."
-    memory = ConversationBufferMemory(memory_key="chat_history")
-    agent = initialize_agent(
-        tools=tools,
-        llm=llm,
-        agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
-        memory=memory,
-        verbose=False,
-        agent_kwargs={
-            "prefix": role_prompt,
-            "suffix": suffix_prompt,
-        },
+    prompt = PromptTemplate(
+        input_variables=["topic"],
+        template=template
     )
-    return agent
+    chain = LLMChain(
+        llm=ChatFairo(),
+        prompt=prompt,
+        verbose=False,
+    )
+    return chain
