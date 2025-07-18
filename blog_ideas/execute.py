@@ -1,5 +1,4 @@
 from fairo.core.execution.executor import FairoExecutor
-from fairo.core.runnable.runnable import Runnable
 from blog_ideas_agent import ideasforblogpost
 FairoExecutor(
     agents=[ideasforblogpost],
