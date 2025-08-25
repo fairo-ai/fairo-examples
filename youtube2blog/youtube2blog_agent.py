@@ -7,6 +7,11 @@ import tempfile
 import openai
 from pytubefix.cli import on_progress
 import os
+from pydantic import BaseModel, Field
+
+class InputSchema(BaseModel):
+    input: str = Field(description="The youtube video URL or ID")
+    language: str = Field(description="The output language (e.g en, pt)")
 
 def youtube2blog():
     def download_audio(video_id: str) -> str:
@@ -70,7 +75,8 @@ def youtube2blog():
         verbose=True,
         tools=[youtube_transcript_tool],
         agent=agent,
-        max_iterations=4
+        max_iterations=4,
+        input_schema=InputSchema
     )
     
     return executor
