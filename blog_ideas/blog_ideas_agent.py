@@ -14,6 +14,7 @@ def ideasforblogpost():
         template=template
     )
     chain = LLMChain(
+        name="BlogIdeas",
         llm=ChatFairo(),
         prompt=prompt,
         verbose=False,
