@@ -32,35 +32,27 @@ export FAIRO_API_SECRET=<your-secret>
 ## 3 · Create your first agent
 ##### `blog_ideas_agent.py`
 ```python
-from langchain.agents import initialize_agent
-from langchain.agents import AgentType
-from langchain.memory import ConversationBufferMemory
-from fairo.core.chat.chat import FairoChat
-
+from langchain.prompts import PromptTemplate
+from langchain.chains import LLMChain
+from fairo.core.chat import ChatFairo
 def ideasforblogpost():
-    llm = FairoChat(
-        endpoint="chat",
-    )
-    tools = []
-    role_prompt = """
-    You are Ideas For Blogpost Agent, an expert at reading a subject and providing new blogpost ideas for that niche.
-    You always:
-    - Structure a list of 10 new blogpost titles based on the subject provided
+    template = """
+    You are an expert Blog-Post Idea Generator.
+    When given a topic, you must output a list of 10 creative blog post titles,
+    each on its own line.
+
+    Topic: {topic}
     """
-    suffix_prompt = "When given a subject, read it and output a structured list of 10 new blogpost titles."
-    memory = ConversationBufferMemory(memory_key="chat_history")
-    agent = initialize_agent(
-        tools=tools,
-        llm=llm,
-        agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
-        memory=memory,
-        verbose=False,
-        agent_kwargs={
-            "prefix": role_prompt,
-            "suffix": suffix_prompt,
-        },
+    prompt = PromptTemplate(
+        input_variables=["topic"],
+        template=template
     )
-    return agent
+    chain = LLMChain(
+        llm=ChatFairo(),
+        prompt=prompt,
+        verbose=False,
+    )
+    return chain
 ```
 
 ---
@@ -71,9 +63,13 @@ Create a new file to invoke the execution and build your chain.
 
 ##### `execute.py`
 ```python
+from pydantic import BaseModel, Field
 from fairo.core.execution.executor import FairoExecutor
 from blog_ideas_agent import ideasforblogpost
+class InputSchema(BaseModel):
+        topic: str = Field(description="The subject you want generate ideas for")
 FairoExecutor(
+    input_schema=InputSchema,
     agents=[ideasforblogpost],
     input_fields=["topic"]
 ).run({"topic": "LLMs"})
